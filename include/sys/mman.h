@@ -31,6 +31,7 @@ typedef int64_t OffsetType;
 #else
 typedef uint32_t OffsetType;
 #endif
+typedef int64_t OffsetType64;
 
 #include <sys/types.h>
 
@@ -45,7 +46,10 @@ typedef uint32_t OffsetType;
 #define MAP_TYPE 0xf
 #define MAP_FIXED 0x10
 #define MAP_ANONYMOUS 0x20
+// MAP_ANONYMOUS is named MAP_ANON on OSX/BSD.
 #define MAP_ANON MAP_ANONYMOUS
+#define MAP_POPULATE 0x40
+#define MAP_NORESERVE 0x80
 
 #define MAP_FAILED ((void *)-1)
 
@@ -54,11 +58,16 @@ typedef uint32_t OffsetType;
 #define MS_SYNC 2
 #define MS_INVALIDATE 4
 
+#define MADV_NORMAL 0
+#define MADV_DONTNEED 0
+#define MADV_SEQUENTIAL 0
+
 #if defined(__cplusplus)
 extern "C" {
 #endif
 
 	void *mmap(void *addr, size_t len, int prot, int flags, int fildes, OffsetType off);
+	void *mmap64(void* addr, size_t len, int prot, int flags, int fildes, OffsetType64 off);
 	int munmap(void *addr, size_t len);
 	int mprotect(void *addr, size_t len, int prot);
 
@@ -80,103 +89,3 @@ extern "C" {
 #endif
 
 #endif  // (_MSC_VER)
-
-
-
-
-
-
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-#pragma once
-
-#ifndef _WIN32
-
-#include <sys/mman.h>
-
- // MAP_ANONYMOUS is named MAP_ANON on OSX/BSD.
-#if defined(__APPLE__) || defined(__FreeBSD__)
-#if !defined(MAP_ANONYMOUS) && defined(MAP_ANON)
-#define MAP_ANONYMOUS MAP_ANON
-#endif
-#endif
-
-#else
-
-#include <cstdint>
-
-#include <sys/types.h>
-
-using off64_t = int64_t;
-
-#define MAP_ANONYMOUS 1
-#define MAP_ANON MAP_ANONYMOUS
-#define MAP_SHARED 2
-#define MAP_PRIVATE 4
-#define MAP_POPULATE 8
-#define MAP_NORESERVE 16
-#define MAP_FIXED 32
-
-#define MAP_FAILED ((void*)-1)
-
-#define PROT_NONE 0
-#define PROT_READ 1
-#define PROT_WRITE 2
-#define PROT_EXEC 4
-
-#define MADV_NORMAL 0
-#define MADV_DONTNEED 0
-#define MADV_SEQUENTIAL 0
-
-#if defined(__cplusplus)
-extern "C" {
-#endif
-
-	int madvise(const void* addr, size_t len, int advise);
-	int mlock(const void* addr, size_t len);
-	void* mmap(void* addr, size_t length, int prot, int flags, int fd, off_t off);
-	void* mmap64(void* addr, size_t length, int prot, int flags, int fd, off64_t off);
-	int mprotect(void* addr, size_t size, int prot);
-	int munlock(const void* addr, size_t length);
-	int munmap(void* addr, size_t length);
-
-#if defined(__cplusplus)
-}
-#endif
-
-#endif
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
